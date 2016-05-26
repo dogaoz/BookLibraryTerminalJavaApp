@@ -47,7 +47,7 @@ create table Student (
 	studentName nvarchar(50),
 	studentAddress nvarchar(100),
 	studentPhone char(11),
-	numberOfBooks tinyint,
+	numberOfBooks tinyint default 0,
 	facultyId int,
 	
 	constraint pkstudent primary key (studentNumber)
@@ -84,8 +84,9 @@ alter table stateDetail add constraint fkStateId_detail
 	
 alter table stateDetail add constraint fkBookId_detail
 	foreign key (bookId) references Book (bookId);
-	
 
+alter table Student add constraint chk_maxborrow
+	check (numberOfBooks between 0 and 5);
 
 
 -- Mock Data
@@ -110,7 +111,15 @@ INSERT INTO publisher (publisherName) VALUES ('Pearson')
 
 INSERT INTO Book (bookName, authorId,categoryId,publisherId,page,ISBN,stateId)
 			VALUES ('The book',1,1,1,340,000000001,1)
-				  ,('Thomas Calculus ',3,2,1,1000,000000002,1);
+				  ,('Thomas'' Calculus ',3,2,1,991,000000002,1)
+				  ,('Some other book',2,5,4,250,000000003,1)
+				  ,('Health 101 ',2,4,5,175,000000004,1)
+				  ,('Integration Formulas',4,2,3,448,000000005,1)
+				  ,('Other book 2 ',5,1,2,678,000000006,1)
+				  ,('some other book 2 ',3,3,1,882,000000007,1)
+				  ,('Other book ',5,3,5,435,000000008,1)
+				  ,('Negotiate To Win! ',1,5,2,202,000000009,1)
+				  ,('Finance Advices From Pros',2,5,3,201,000000010,1);
 
 INSERT INTO faculty (facultyName) VALUES ('Law'),
 										 ('Engineering'),
@@ -123,6 +132,14 @@ INSERT INTO Student (studentNumber,studentName,studentAddress,studentPhone,numbe
 				   ('150101037','Mert Cakir','address 123','05001234567',0,1),
 				   ('150101045','Ayse Comert','address 123','05001234567',0,3),
 				   ('150101017','Merve Tir','address 123','05001234567',0,4);
+
+				   --state type = 0 returned , 1 borrowed
+INSERT INTO state (stateType, startDate, endDate,studentNumber) 
+			VALUES  (0, 2016-05-22, 2016-05-25, 150301037),
+					(1, 2016-05-26, 2016-06-10, 150301038),
+					(0, 2016-05-22, 2016-05-25, 150301037),
+					(0, 2016-05-22, 2016-05-25, 150301037),
+					(0, 2016-05-22, 2016-05-25, 150301037);
 -- Find the number of books by category
 SELECT COUNT(*) FROM Book 
 -- Display all book titles taken by students in Math Category
