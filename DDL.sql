@@ -252,7 +252,8 @@ UPDATE state set stateType = 0 WHERE state.stateId = (SELECT stateDetail.stateId
 		GROUP BY category.categoryName,B.bookName,B.bookId) as t
 		GROUP BY t.categoryName,t.bookId
 
---Write a query to find total number of books borrowed by category. SELECT t.categoryName, SUM(t.Borrowed) as totalBorrowed
+--Write a query to find total number of books borrowed by category. 
+SELECT t.categoryName, SUM(t.Borrowed) as totalBorrowed
 		FROM
 		(
 		SELECT category.categoryName, B.bookName
@@ -263,20 +264,9 @@ UPDATE state set stateType = 0 WHERE state.stateId = (SELECT stateDetail.stateId
 		FROM Book as B
 		JOIN category on category.categoryId = B.categoryId
 		GROUP BY category.categoryName,B.bookName,B.bookId) as t
-		GROUP BY t.categoryName--Write a query that finds all categories that have at least one book takenSELECT *
-FROM
-(SELECT t.categoryName, SUM(t.Borrowed) as totalBorrowed
-		FROM
-		(
-		SELECT category.categoryName, B.bookName
-												
-												, (SELECT COUNT(*) from stateDetail
-												JOIN state on stateDetail.stateId = state.stateId
-												WHERE (state.stateType = 1 AND stateDetail.bookId= B.bookId )) as Borrowed
-		FROM Book as B
-		JOIN category on category.categoryId = B.categoryId
-		GROUP BY category.categoryName,B.bookName,B.bookId) as t
-		GROUP BY t.categoryName) as k		GROUP BY k.categoryName,k.totalBorrowed		HAVING MIN(k.totalBorrowed) > 0--Write a query that finds all categories that have have more than 100 books taken
+		GROUP BY t.categoryName
+
+--Write a query that finds all categories that have at least one book taken
 SELECT *
 FROM
 (SELECT t.categoryName, SUM(t.Borrowed) as totalBorrowed
@@ -290,8 +280,64 @@ FROM
 		FROM Book as B
 		JOIN category on category.categoryId = B.categoryId
 		GROUP BY category.categoryName,B.bookName,B.bookId) as t
-		GROUP BY t.categoryName) as k		GROUP BY k.categoryName,k.totalBorrowed		HAVING MIN(k.totalBorrowed) > 100
+		GROUP BY t.categoryName) as k
+		GROUP BY k.categoryName,k.totalBorrowed
+		HAVING MIN(k.totalBorrowed) > 0
 
---Write a query to delete all books that are published before 1980 and is not borrowed as of todayDELETE FROM Book WHERE (YEAR(Book.publishDate) < 1980 AND NOT EXISTS ( SELECT * from stateDetail
+--Write a query that finds all categories that have have more than 100 books taken
+
+SELECT *
+FROM
+(SELECT t.categoryName, SUM(t.Borrowed) as totalBorrowed
+		FROM
+		(
+		SELECT category.categoryName, B.bookName
+												
+												, (SELECT COUNT(*) from stateDetail
 												JOIN state on stateDetail.stateId = state.stateId
-												WHERE (state.stateType = 1 AND stateDetail.bookId= Book.bookId )) )--Write a query to update all book quantities to be -1 for books in Sales categoryUPDATE Book SET Book.quantity = -1 FROM Book JOIN category on Book.categoryId = category.categoryId WHERE  category.categoryName = 'finance';	--Using Labwork2, create following views--Add borrow and return Dates as DateTime columns in your tables--Creates views --to show all books and borrowers with borrow dates--Then write a query using the view to show books that have been borrowed in last 3 months--to show all books and return dates--Then write a query using the view to show books that have been borrowed the longest time in last year--Create check constraints on borrow and return relations as below--Check that borrow return dates are after current date--Check date return borrow quantities are always > 1--Now using your design and queries, create a simple Java application to support following application menu--Admin--Add : program should store Enter data for a book. ISBN No is a 9 digit number and is unique--Search : program should search for a book by ISBN No and/or title and output the result(s) in tabular form --Statistics: Number of books taken and not returned yet will be displayed by user name-- User--Borrow: Enter a student id and borrow and/or return option for a book by ISBN. A student can borrow at most five books at a time.  --Search : program should search for a book by ISBN No and/or title and output the result(s) in tabular form--Return: : Enter a student id and return a book by ISBN
+												WHERE (state.stateType = 1 AND stateDetail.bookId= B.bookId )) as Borrowed
+		FROM Book as B
+		JOIN category on category.categoryId = B.categoryId
+		GROUP BY category.categoryName,B.bookName,B.bookId) as t
+		GROUP BY t.categoryName) as k
+		GROUP BY k.categoryName,k.totalBorrowed
+		HAVING MIN(k.totalBorrowed) > 100
+
+--Write a query to delete all books that are published before 1980 and is not borrowed as of today
+
+DELETE FROM Book WHERE (YEAR(Book.publishDate) < 1980 AND NOT EXISTS ( SELECT * from stateDetail
+												JOIN state on stateDetail.stateId = state.stateId
+												WHERE (state.stateType = 1 AND stateDetail.bookId= Book.bookId )) )
+
+--Write a query to update all book quantities to be -1 for books in Sales category
+
+UPDATE Book SET Book.quantity = -1 FROM Book JOIN category on Book.categoryId = category.categoryId WHERE  category.categoryName = 'finance';
+	
+
+--Using Labwork2, create following views
+--Add borrow and return Dates as DateTime columns in your tables
+--Creates views 
+--to show all books and borrowers with borrow dates
+--Then write a query using the view to show books that have been borrowed in last 3 months
+--to show all books and return dates
+--Then write a query using the view to show books that have been borrowed the longest time in last year
+create view showCurrentBookOwnershipStatus as
+	 
+
+
+--Create check constraints on borrow and return relations as below
+--Check that borrow return dates are after current date
+--Check date return borrow quantities are always > 1
+
+
+--Now using your design and queries, create a simple Java application to support following application menu
+--Admin
+--Add : program should store Enter data for a book. ISBN No is a 9 digit number and is unique
+--Search : program should search for a book by ISBN No and/or title and output the result(s) in tabular form 
+--Statistics: Number of books taken and not returned yet will be displayed by user name
+-- User
+--Borrow: Enter a student id and borrow and/or return option for a book by ISBN. A student can borrow at most five books at a time.  
+--Search : program should search for a book by ISBN No and/or title and output the result(s) in tabular form
+--Return: : Enter a student id and return a book by ISBN
+
+
