@@ -135,11 +135,15 @@ INSERT INTO Student (studentNumber,studentName,studentAddress,studentPhone,numbe
 
 				   --state type = 0 returned , 1 borrowed
 INSERT INTO state (stateType, startDate, endDate,studentNumber) 
-			VALUES  (0, 2016-05-22, 2016-05-25, 150301037),
-					(1, 2016-05-26, 2016-06-10, 150301038),
-					(0, 2016-05-22, 2016-05-25, 150301037),
-					(0, 2016-05-22, 2016-05-25, 150301037),
-					(0, 2016-05-22, 2016-05-25, 150301037);
+			VALUES  (0, 2016-05-22, 2016-05-25, '150301037'),
+					(0, 2016-05-22, 2016-05-25, '150101037'),
+					(0, 2016-05-22, 2016-05-25, '150101045'),
+					(0, 2016-05-22, 2016-05-25, '150101045'),
+					(1, 2016-05-26, 2016-06-10, '150301038'),
+					(1, 2016-05-26, 2016-06-10, '150301038'),
+					(1, 2016-05-26, 2016-06-10, '150301038'),
+					(1, 2016-05-26, 2016-06-10, '150301038'),
+					(1, 2016-05-26, 2016-06-10, '150301038');
 -- Find the number of books by category
 SELECT COUNT(*) FROM Book 
 -- Display all book titles taken by students in Math Category
