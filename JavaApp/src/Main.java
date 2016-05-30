@@ -1,5 +1,8 @@
 import java.sql.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Scanner;
+import java.util.Date;
 
 public class Main {
 
@@ -69,16 +72,43 @@ public class Main {
 
                 switch (choice) {
                     case 1:
-                        System.out.println("Enter student No");
-                        String stId = input.next();
-                        findStudent(stId);
+                        System.out.println("Enter Book Name");
+                        String bookName = input.next();
+                        System.out.println("Enter Author Name");
+                        String authorName = input.next();
+                        System.out.println("Enter Category Name");
+                        String categoryName = input.next();
+                        System.out.println("Enter Publisher Name");
+                        String publisherName = input.next();
+                        System.out.println("Enter Page Numbers");
+                        String page = input.next();
+                        System.out.println("Enter ISBN (9 characters)");
+                        String ISBN = input.next();
+                        System.out.println("Publish Date (e.g. 2015-11-20)");
+                        String publishDate = input.next();
+                        addBook(bookName, authorName,categoryName,publisherName,Integer.parseInt(page),Integer.parseInt(ISBN),publishDate);
                         break;
                     case 2:
-                        System.out.println("Enter faculty");
-                        String facl = input.next();
-                        listCourses(facl);
+                    	
+                    	System.out.println("\nEnter choice, 0 to back to upper menu");
+                        System.out.println("1- Search By ISBN");
+                        System.out.println("2- Search By Title");
+                        int choice2 = input.nextInt();
+                        switch (choice2) {
+                        case 1:
+                        	System.out.println("\nEnter 9 digit ISBN Number");
+                        	searchByISBN(input.nextInt());
+                        	break;
+                        case 2:
+                        	System.out.println("\nEnter Book Name");
+                        	searchByString(input.next());
+                            break;
+                        default :
+                        	break;
+                        }
                         break;
                     case 3:
+                    	statistics();
                     	break;
                     case 0:
                         System.out.println("bye");
@@ -106,14 +136,36 @@ public class Main {
                         case 1:
                             System.out.println("Enter student No");
                             String stId = input.next();
-                            findStudent(stId);
+                            System.out.println("Enter Book Id");
+                            int bookId = input.nextInt();
+                            System.out.println("When will you return the book (e.g. 2015-11-20)");
+                            String endDate = input.next();
+                            borrowBook(stId,bookId,endDate);
                             break;
                         case 2:
-                            System.out.println("Enter faculty");
-                            String facl = input.next();
-                            listCourses(facl);
+                        	System.out.println("\nEnter choice, 0 to back to upper menu");
+                            System.out.println("1- Search By ISBN");
+                            System.out.println("2- Search By Title");
+                            int choice2 = input.nextInt();
+                            switch (choice2) {
+                            case 1:
+                            	System.out.println("\nEnter 9 digit ISBN Number");
+                            	searchByISBN(input.nextInt());
+                            	break;
+                            case 2:
+                            	System.out.println("\nEnter Book Name");
+                            	searchByString(input.next());
+                                break;
+                            default :
+                            	break;
+                            }
                             break;
                         case 3:
+                        	 System.out.println("Enter student No");
+                             String stId2 = input.next();
+                             System.out.println("Enter Book Id");
+                             int bookId2 = input.nextInt();
+                             returnBook(stId2,bookId2);
                         	break;
                         case 0:
                             System.out.println("bye");
@@ -132,33 +184,226 @@ public class Main {
         }
     }
 
-    private void findStudent(String stuNo) throws SQLException {
-        PreparedStatement ps = null;
-        ResultSet result = null;
+    private void returnBook(String stId, int bookId) throws SQLException {
+    	PreparedStatement ps = null;
+
+       try {
+       	 
+           ps = this.conn.prepareStatement(
+                   "UPDATE state set stateType = 0 FROM state JOIN stateDetail on stateDetail.bookId = ? WHERE state.studentNumber = ?");
+           ps.setInt(1, bookId);
+           ps.setString(2, stId);
+           int affected = ps.executeUpdate();
+           if (affected == 1) {
+               System.out.println("returned book");
+           } else {
+               System.out.println("returning book unsuccessful");
+           }
+       } finally {
+           if (ps != null) {
+               ps.close();
+           }
+       }
+		
+	}
+    private void borrowBook(String stId, int bookId, String endDate)throws SQLException {
+    	PreparedStatement ps = null;
+
+       try {
+       	 
+           ps = this.conn.prepareStatement(
+                   "INSERT INTO state (stateType,startDate,endDate,studentNumber) VALUES (?,?,?,?); INSERT INTO stateDetail (bookId) VALUES (?);");
+           DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+           Date date = new Date();
+           ps.setInt(1, 1);
+           ps.setString(2, dateFormat.format(date));
+           ps.setString(3, endDate);
+           ps.setString(4, stId);
+           ps.setInt(5, bookId);
+           int affected = ps.executeUpdate();
+           if (affected == 1) {
+               System.out.println("borrowed book");
+           } else {
+               System.out.println("borrowing book unsuccessful : possible reason, there isn't any book left");
+           }
+       } finally {
+           if (ps != null) {
+               ps.close();
+           }
+       }
+		
+	}
+
+	private void searchByString(String next) throws SQLException {
+    PreparedStatement ps = null;
+   	 ResultSet result = null;
+
+       try {
+       	
+       	ps = this.conn.prepareStatement("SELECT * FROM Book "
+       			+ "JOIN author on author.authorId = Book.authorId "
+       			+ "JOIN publisher on publisher.publisherId = Book.publisherId "
+       			+ "JOIN category on category.categoryId = Book.categoryId "
+       			+ "WHERE bookName LIKE ?");
+       	ps.setString(1,"%"+ next + "%");
+       	result = ps.executeQuery();	
+       			
+       	 while (result.next()) {
+	                System.out.println(result.getInt("bookId")+ " | " 
+	                				+ result.getString("bookName")+ " | " 
+	                				+ result.getString("categoryName")+ " | "
+	                				+ result.getInt("page")+ " | "
+	                				+ result.getString("authorName")+ " | "
+	                				+ result.getString("publisherName"));
+	            }
+       	 ps.close();
+       	
+       } finally {
+           if (ps != null) {
+               ps.close();
+           }
+       }
+		
+	}
+		
+	
+
+	private void searchByISBN(int nextInt) throws SQLException {
+	    PreparedStatement ps = null;
+	   	 ResultSet result = null;
+
+	       try {
+	       	
+	       	ps = this.conn.prepareStatement("SELECT * FROM Book "
+	       			+ "JOIN author on author.authorId = Book.authorId "
+	       			+ "JOIN publisher on publisher.publisherId = Book.publisherId "
+	       			+ "JOIN category on category.categoryId = Book.categoryId "
+	       			+ "WHERE ISBN = ?");
+	       	ps.setInt(1,nextInt);
+	       	result = ps.executeQuery();	
+	       			
+	       	 while (result.next()) {
+		                System.out.println(result.getString("bookName")+ " | " 
+		                				+ result.getString("categoryName")+ " | "
+		                				+ result.getInt("page")+ " | "
+		                				+ result.getString("authorName")+ " | "
+		                				+ result.getString("publisherName"));
+		            }
+	       	 ps.close();
+	       	
+	       } finally {
+	           if (ps != null) {
+	               ps.close();
+	           }
+	       }
+			
+		}
+
+	private void statistics() throws SQLException {
+        	PreparedStatement ps = null;
+        	 ResultSet result = null;
+
+            try {
+            	
+            	ps = this.conn.prepareStatement("SELECT * FROM showCurrentBookOwnershipStatus WHERE Status = 'Borrowed'");
+            	result = ps.executeQuery();	
+            			
+            	 while (result.next()) {
+    	                System.out.println(result.getString("bookName")+ " | " 
+    	                				+ result.getString("authorName")+ " | "
+    	                				+ result.getInt("page")+ " | " 
+    	                				+ result.getString("studentName")+ " | "
+    	                				+ result.getDate("startDate")+ " | " 
+    	                				+ result.getDate("endDate"));
+    	            }
+            	 ps.close();
+            	
+            } finally {
+                if (ps != null) {
+                    ps.close();
+                }
+            }
+    		
+    	}
+
+	private void addBook(String bookName, String authorName, String categoryName, String publisherName, int page,
+			int ISBN, String publishDate) throws SQLException {
+    	PreparedStatement ps = null;
+    	 ResultSet result = null;
+    	 Boolean isInserted =false;
+    	 int authorId = 0;
+    	 int categoryId = 0;
+    	 int publisherId = 0;
+
         try {
+        	 
+        	ps = this.conn.prepareStatement("INSERT INTO author (authorName) VALUES (?);");
+        	ps.setString(1, authorName);
+        	isInserted = ps.execute();	
+        			
+        	ps.close();
+        	ps = this.conn.prepareStatement("SELECT authorId from author where authorName = ?");
+        	ps.setString(1, authorName);
+        	result = ps.executeQuery();	
+        			
+        	 while (result.next()) {
+	                authorId = result.getInt("authorId");
+	                System.out.println(authorId);
+	            }
+        	 ps.close();
+        	 ps = this.conn.prepareStatement("INSERT INTO category (categoryName) VALUES (?);");
+         	ps.setString(1, categoryName);
+         	isInserted = ps.execute();	
+         			
+         	ps.close();
+         	ps = this.conn.prepareStatement("SELECT categoryId from category where categoryName = ?");
+         	ps.setString(1, categoryName);
+         	result = ps.executeQuery();	
+         			
+         	 while (result.next()) {
+ 	                categoryId = result.getInt("categoryId");
+ 	                System.out.println(categoryId);
+ 	            }
+         	 ps.close();
+         	ps = this.conn.prepareStatement("INSERT INTO publisher (publisherName) VALUES (?);");
+        	ps.setString(1, publisherName);
+        	isInserted = ps.execute();	
+        			
+        	ps.close();
+        	ps = this.conn.prepareStatement("SELECT publisherId from publisher where publisherName = ?");
+        	ps.setString(1, publisherName);
+        	result = ps.executeQuery();	
+        			
+        	 while (result.next()) {
+	                publisherId = result.getInt("publisherId");
+	                System.out.println(publisherId);
+	            }
+        	 ps.close();
             ps = this.conn.prepareStatement(
-                    "SELECT studentNo, stuFirstname, stuLastname, stuGpa"
-                    + " FROM  student WHERE studentNo = ?");
-            ps.setString(1, stuNo);
-            result = ps.executeQuery();
-            if (result.next()) {
-                String fName = result.getString("StuFirstname"); //result.getString(2); 
-                String lName = result.getString("StuLastname"); //  result.getString(3); 
-                double gpa = result.getDouble("StuGpa"); //  result.getString(3); 
-                System.out.println("Student with ID : " + stuNo + " found");
-                System.out.println("Firstname : " + fName + ", lastname : " + lName + ",gpa : " + gpa);
+                    "INSERT INTO Book (bookName, authorId,categoryId,publisherId,page,ISBN,publishDate) VALUES (?,?,?,?,?,?,?);");
+
+            ps.setString(1, bookName);
+            ps.setInt(2, authorId);
+            ps.setInt(3, categoryId);
+            ps.setInt(4, publisherId);
+            ps.setInt(5, page);
+            ps.setInt(6, ISBN);
+            ps.setString(7,publishDate);
+            int affected = ps.executeUpdate();
+            if (affected == 1) {
+                System.out.println("added book successfully");
             } else {
-                System.out.println("Student with ID : " + stuNo + " NOT found");
+                System.out.println("adding book not successful.");
             }
         } finally {
             if (ps != null) {
                 ps.close();
             }
-            if (result != null) {
-                result.close();
-            }
         }
-    }
+		
+	}
+
+
 
     /**
      * EX

@@ -66,8 +66,8 @@ alter table Student add constraint fkStudentFaculty
 create table state (
 	stateId int NOT NULL IDENTITY,
 	stateType bit NOT NULL,
-	startDate date NOT NULL,
-	endDate date NOT NULL,
+	startDate datetime NOT NULL,
+	endDate datetime NOT NULL,
 	studentNumber char(9) NOT NULL,
 	constraint pkState primary key (stateId)
 	);
@@ -137,25 +137,25 @@ INSERT INTO Student (studentNumber,studentName,studentAddress,studentPhone,numbe
 
 				   --state type = 0 returned , 1 borrowed
 INSERT INTO state (stateType, startDate, endDate,studentNumber) 
-			VALUES  (0, '2016-05-12', '2016-05-15', '150301037'),
-					(0, '2016-05-22', '2016-05-25', '150101037'),
-					(0, '2016-05-21', '2016-05-23', '150101017'),
-					(0, '2016-05-18', '2016-05-21', '150101045'),
-					(0, '2016-05-12', '2016-05-17', '150101037'),
-					(0, '2016-03-22', '2016-03-27', '150101037'),
-					(0, '2016-04-18', '2016-04-23', '150101045'),
-					(0, '2016-05-16', '2016-05-18', '150101045'),
-					(0, '2016-03-12', '2016-03-15', '150301037'),
-					(0, '2016-03-22', '2016-03-25', '150301037'),
-					(1, '2016-05-26', '2016-06-10', '150301038'),
-					(1, '2016-05-27', '2016-06-05', '150101037'),
-					(1, '2016-05-26', '2016-06-03', '150301038'),
-					(1, '2016-05-26', '2016-06-02', '150101017'),
-					(1, '2016-05-28', '2016-06-01', '150101045'),
-					(1, '2016-05-28', '2016-06-01', '150101045'),
-					(1, '2016-05-28', '2016-06-01', '150101045'),
-					(1, '2016-05-28', '2016-06-01', '150101045'),
-					(1, '2016-05-28', '2016-06-01', '150101045');
+			VALUES  (0, '2016-05-12 12:45:00', '2016-05-15 12:45:00', '150301037'),
+					(0, '2015-05-22 12:45:00', '2015-05-25 12:45:00', '150101037'),
+					(0, '2016-05-21 12:45:00', '2016-05-23 12:45:00', '150101017'),
+					(0, '2013-05-18 12:45:00', '2013-05-21 12:45:00', '150101045'),
+					(0, '2016-05-12 12:45:00', '2016-05-17 12:45:00', '150101037'),
+					(0, '2014-03-22 12:45:00', '2014-03-27 12:45:00', '150101037'),
+					(0, '2016-04-18 12:45:00', '2016-04-23 12:45:00', '150101045'),
+					(0, '2011-05-16 12:45:00', '2011-05-18 12:45:00', '150101045'),
+					(0, '2016-03-12 12:45:00', '2016-03-15 12:45:00', '150301037'),
+					(0, '2016-03-22 12:45:00', '2016-03-25 12:45:00', '150301037'),
+					(1, '2012-05-26 12:45:00', '2012-06-10 12:45:00', '150301038'),
+					(1, '2016-05-27 12:45:00', '2016-06-05 12:45:00', '150101037'),
+					(1, '2016-05-26 12:45:00', '2016-06-03 12:45:00', '150301038'),
+					(1, '2016-05-26 12:45:00', '2016-06-02 12:45:00', '150101017'),
+					(1, '2016-05-28 12:45:00', '2016-06-01 12:45:00', '150101045'),
+					(1, '2011-05-28 12:45:00', '2011-06-01 12:45:00', '150101045'),
+					(1, '2016-05-28 12:45:00', '2016-06-01 12:45:00', '150101045'),
+					(1, '2016-05-28 12:45:00', '2016-06-01 12:45:00', '150101045'),
+					(1, '2016-05-28 12:45:00', '2016-06-01 12:45:00', '150101045');
 INSERT INTO stateDetail (bookId) VALUES 
 								(1),
 								(2),
@@ -239,6 +239,7 @@ UPDATE state set stateType = 0 WHERE state.stateId = (SELECT stateDetail.stateId
 
 --Write a query to find the book(s) that were borrowed the most in each category
 
+
 		SELECT t.categoryName, MAX(t.Borrowed) as maxBorrowed
 		FROM
 		(
@@ -316,28 +317,45 @@ UPDATE Book SET Book.quantity = -1 FROM Book JOIN category on Book.categoryId = 
 
 --Using Labwork2, create following views
 --Add borrow and return Dates as DateTime columns in your tables
---Creates views 
+--Create views 
 --to show all books and borrowers with borrow dates
+
+create view showCurrentBookOwnershipStatus as
+
+	SELECT Book.bookId, Book.bookName, author.authorName, Book.page, Student.studentName, state.startDate, state.endDate,  
+	CASE WHEN state.stateType = 0 THEN 'Returned' ELSE 'Borrowed' END as Status
+	FROM Book
+	JOIN stateDetail on stateDetail.bookId = Book.bookId
+	JOIN state on state.stateId = stateDetail.stateId
+	JOIN author on author.authorId = Book.authorId
+	JOIN publisher on publisher.publisherId = Book.publisherId
+	JOIN Student on Student.studentNumber = state.studentNumber;
+
+
 --Then write a query using the view to show books that have been borrowed in last 3 months
 --to show all books and return dates
---Then write a query using the view to show books that have been borrowed the longest time in last year
-create view showCurrentBookOwnershipStatus as
-	 
+
+SELECT * FROM showCurrentBookOwnershipStatus WHERE DATEDIFF(MONTH,startDate,GETDATE()) < 3
 
 
---Create check constraints on borrow and return relations as below
---Check that borrow return dates are after current date
---Check date return borrow quantities are always > 1
+--Then write a query using the view to show books that have been borrowed the longest time in last year	
+SELECT *
+FROM (
+SELECT bookName, authorName, page, studentName, startDate, endDate, Status
+	, DATEDIFF(DAY,startDate,endDate)as Day,MAX(DATEDIFF(DAY,startDate,endDate)) as LongestDay 
+	FROM showCurrentBookOwnershipStatus 
+	WHERE DATEDIFF(YEAR,startDate,GETDATE()) < 1
+	GROUP BY bookName, authorName, page, studentName, startDate, endDate, Status
+	) as t
+	WHERE t.Day = LongestDay
+	GROUP BY t.bookName, t.authorName, t.page, t.studentName, t.startDate, t.endDate, t.Status,t.Day, t.LongestDay
+	
 
 
---Now using your design and queries, create a simple Java application to support following application menu
---Admin
---Add : program should store Enter data for a book. ISBN No is a 9 digit number and is unique
---Search : program should search for a book by ISBN No and/or title and output the result(s) in tabular form 
---Statistics: Number of books taken and not returned yet will be displayed by user name
--- User
---Borrow: Enter a student id and borrow and/or return option for a book by ISBN. A student can borrow at most five books at a time.  
---Search : program should search for a book by ISBN No and/or title and output the result(s) in tabular form
---Return: : Enter a student id and return a book by ISBN
+
+
+--Check constraint that borrow return dates are after current date
+alter table state add constraint chk_returnDate
+	check (endDate > getdate());
 
 
